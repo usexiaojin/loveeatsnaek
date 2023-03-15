@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title> 
+        <style>
+            /* 重置 */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            .main {
+                height: 420px;
+                width: 360px;
+                border: 10px #000 solid;
+                background-color: bisque;
+                border-radius: 20px;
+                margin: 50px auto;
+            }
+            #stage {
+                width: 304px;
+                height: 304px;
+                border: 2px #000 solid;
+                margin: 20px auto;
+                position: relative;
+            }
+            #info {
+                width: 304px;
+                margin: 30px auto;
+                display: flex;
+                justify-content: space-between;
+                font: bold 20px courier;
+            }
+            #food {
+                width: 10px;
+                height: 10px;
+                background-color: green;
+                position: absolute;
+                top: 100px;
+                left: 120px;
+            }
+            #snake > div {
+                width: 10px;
+                height: 10px;
+                background-color: green;
+                position: absolute;
+                border: 1px solid red;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="main">
+            <div id="stage">
+                <div id="snake">
+                    <div></div>
+                </div>
+                <div id="food"></div>
+            </div>
+            <div id="info">
+                <div>SCORE: <span id="score">0</span></div>
+                <div>LEVEL:<span id="level">1</span></div>
+            </div>
+        </div>
+        <script>
+            /*
+                1禁止掉头
+                2游戏终止
+                3记录分数
+            */
+            //  绑定按键事件 keydown keyup,键盘事件只能绑定诶可以获取焦点的元素或者document
+
+            // 获取蛇的容器
+            const snake = document.getElementById('snake')
+            //获取蛇的各个部分
+            const snakes = snake.getElementsByTagName('div')
+            // 获取食物
+            const food = document.getElementById('food')
+            // 获取分数和level
+
+            const markspan = document.getElementById('score')
+            const levelspan = document.getElementById('level')
+            // 食物的范围（0-290）
+            /*
+            当我们一直按着及某个案件的时候 按键事件会持续触发
+             并且蛇是不停运动的
+             */
+            // 改变食物的位置
+            function changefood() {
+                // 生成0-29的随机数
+                const x = Math.floor(Math.random() * 30) * 10
+                const y = Math.floor(Math.random() * 30) * 10
+                // console.log(x, y)
+                // 设置食物的坐标
+                food.style.left = x + 'px'
+                food.style.top = y + 'px'
+            }
+            // changefood()
+
+            const arrlist = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
+            // 设置方向
+            let dir = null
+            // 创建一个变量 ，记录按键的状态
+            let keyactive = true
+            // 游戏是否结束
+            let gameover = false
+            // 分数
+            let score = 0
+            let level = 1
+            const arrobj = {
+                ArrowUp: 'ArrowDown',
+                ArrowDown: 'ArrowUp',
+                ArrowLeft: 'ArrowRight',
+                ArrowRight: 'ArrowLeft',
+            }
+            /*
+            游戏禁止掉头
+                构成的要件
+                    1身体不能超过2
+                    2不能是相反方向
+                处理
+                    保持原来的方向不变，不能够修改dir的内容
+             */
+            document.addEventListener('keydown', event => {
+                if (keyactive && arrlist.includes(event.key)) {
+                    if (snakes.length < 2) {
+                        dir = event.key
+                    } else {
+                        if (arrobj[dir] !== event.key) {
+                            dir = event.key
+                            keyactive = false
+                        }
+
+                        // console.log(event.key)]
+                    }
+                }
+            })
+            /*
+                要使得 身体和头一起移动  只要在蛇一定的时候  变化的蛇尾巴的位置设置为蛇头的位置
+            */
+            setTimeout(function move() {
+                // 动态获取获取蛇头
+                const head = snakes[0]
+                // 获取蛇头的坐标
+                let x = head.offsetLeft
+                let y = head.offsetTop
+                switch (dir) {
+                    case 'ArrowUp':
+                        console.log('↑')
+                        y -= 10
+                        break
+                    case 'ArrowDown':
+                        console.log('↓')
+                        y += 10
+                        break
+                    case 'ArrowLeft':
+                        console.log('←')
+                        x -= 10
+                        break
+                    case 'ArrowRight':
+                        console.log('→')
+                        x += 10
+                        break
+                }
+
+                // 检查蛇头是否迟到事物
+                if (
+                    head.offsetTop === food.offsetTop &&
+                    head.offsetLeft === food.offsetLeft
+                ) {
+                    console.log('吃到食物')
+                    // 1改变实物的位置
+                    changefood()
+                    // 2增加蛇的身体
+                    snake.insertAdjacentHTML('beforeend', '<div/>')
+                    score++
+                    markspan.textContent = score
+                    if (score % 2 === 0 && level < 14) {
+                        level++
+                        levelspan.textContent = level + 1
+                    }
+                }
+
+                /*
+                    判断游戏是否结束
+                    1撞墙
+                    1撞自己
+                 */
+                // 判断是否撞墙
+
+                if (x < 0 || x > 290 || y < 0 || y > 290) {
+                    alert('游戏结束')
+                    location.reload()
+                    return
+                }
+                // // 判断是够撞到自己
+                for (let index = 0; index < snakes.length - 1; index++) {
+                    if (
+                        snakes[index].offsetLeft === x &&
+                        snakes[index].offsetTop === y
+                    ) {
+                        alert('游戏结束')
+                        location.reload()
+                        return
+                    }
+                }
+                // 获取尾巴
+                const tail = snakes[snakes.length - 1]
+                //移动蛇的位置
+                tail.style.left = x + 'px'
+                tail.style.top = y + 'px'
+                //将尾巴移动到蛇头的位置
+                snake.insertAdjacentElement('afterbegin', tail)
+                // 一次按键只能执行一次
+                keyactive = true
+                // gameover &&
+
+                setTimeout(move, 300 - level * 15)
+            }, 300)
+        </script>
+    </body>
+</html>
